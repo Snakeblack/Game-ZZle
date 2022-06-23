@@ -1,21 +1,24 @@
 import { useState } from "react";
 import { Dragger, GameBoardHolder } from "../../styles/Game.styled";
 import { Commands } from "./Commands";
+import PropTypes from 'prop-types';
 
-export const Game = ({props}) => {
-    const [board, setBoard] = useState(props);
+const Game = ({datos}) => {
+    // const [board, setBoard] = useState(props);
     const [dragging, setDragging] = useState(false);
     const [clean, setClean] = useState(true);
     const [stack, setStack] = useState([]);
     const [functions, setFunctions] = useState({});
     const [delay, setDelay] = useState(100);
-    const { Colors, Items, RobotCol, RobotDir, RobotRow } = board;
+    const { Colors, Items, RobotCol, RobotDir, RobotRow } = datos;
+
+    console.log(Items)
 
     const reset = () => {
         setClean(true);
         setFunctions(functions);
         setStack([]);
-        setBoard({props});
+        // setBoard({props});
     };
 
     const commandMouseDown = (evt) => {
@@ -140,11 +143,99 @@ export const Game = ({props}) => {
     };
 
     const performAction = action => {
+        switch (action) {
+            case "left":
+                return {
+                    RobotDir: parseInt(RobotDir, 10) - 1
+                };
+            case "right":
+                return {
+                    RobotDir: parseInt(RobotDir, 10) + 1
+                }
+            case "forward":
+                switch (Math.abs(parseInt(RobotDir, 10) + 400) % 4) {
+                    case 0:
+                        return {
+                            RobotCol: Math.max(0, parseInt(RobotCol, 10) + 1)
+                        }
+                    case 1:
+                        return {
+                            RobotRow: Math.max(0, parseInt(RobotRow, 10) + 1)
+                        }
+                    case 2:
+                        return {
+                            RobotCol: Math.max(0, parseInt(RobotCol, 10) - 1)
+                        }
+                    case 3:
+                        return {
+                            RobotRow: Math.max(0, parseInt(RobotRow, 10) - 1)
+                        }
+                    default:
+                        return {};
+                }
+            case "f1":
+            case "f2":
+            case "f3":
+            case "f4":
+            case "f5":
+            case "f6":
+                runNow();
+                return {
+                    stack: functions[action].concat(stack)
+                };
+            case "paint-red":
+            case "paint-green":
+            case "paint-blue":
+                let color = action.split("-")[1];
+                if (color === "red") color = "R";
+                if (color === "green") color = "G";
+                if (color === "blue") color = "B";
+                return {
+                    Colors: Colors.map((row, i) => {
+                        if (i === parseInt(RobotRow, 10)) {
+                            return replaceAt(row, parseInt(RobotCol, 10), color);
+                        }
+                        return row;
+                    })
+                };
+            default:
+                return;
+        }
+        checkGame;
+    };
+
+    const checkGame = () => {
+        if (Items[RobotRow][RobotCol] === "#")
+            return setTimeout(reset, delay * 4)
         
+        if (Items[RobotRow][RobotCol] === "*") {
+            return (
+                {Items: Items.map((row, i) => {
+                    if (i === parseInt(RobotRow, 10)) {
+                        return replaceAt(row, parseInt(RobotCol, 10), "%");
+                    }
+                    return row;
+                })}
+            )
+        }
+    
+        const stars = Items.reduce(
+            (prev, next) => prev + (next.match(/\*/g) || []).length,
+            0
+        );
+    
+        if (stars === 0) {
+            clearTimeout(timeout);
+            setTimeout(() => {
+                window.alert("You win!");   
+            }, delay);
+        }
     }
+
 
     return (
         <>
+            <style>{`.gameboard {--delay:${delay}ms}`}</style>
             <GameBoardHolder>
                 {dragging  && (
                     <Dragger
@@ -159,3 +250,9 @@ export const Game = ({props}) => {
         </>
     );
 };
+
+export default Game;
+
+Game.propTypes = {
+    datos: PropTypes.func.isRequired
+}

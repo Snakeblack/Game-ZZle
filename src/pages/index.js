@@ -2,11 +2,13 @@ import Head from "next/head";
 import { useState } from "react";
 import { App, Boards, Container } from "../styles/Home.styled";
 import boards from "../assets/data/data.json";
-import { Game } from "./components/Game";
+import Game from "./components/Game";
 
 const Home = () => {
     const [selected = "285", setSelected] = useState();
     const [dragging, setDragging] = useState(null);
+    const [datos] = boards;
+    
 
     const handleOnClick = (dato) => {
       console.log(dato);
@@ -40,7 +42,8 @@ const Home = () => {
                     ))}
                 </Boards>
                 {selected && (
-                  <Game props={{boards}}
+                  <Game
+                    datos={ boards }
                     key={selected}
                     setDragging={which => setDragging({
                       dragging: which
